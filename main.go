@@ -165,9 +165,13 @@ func copyFileContent(file *zip.File, path string) {
 		log.Fatal(err)
 	}
 
-	filename := strings.Split(file.Name, "/")[1]
+	fileNameParts := strings.Split(file.Name, "/")
 
-	f, err := os.OpenFile(filepath.Join(path, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	f, err := os.OpenFile(
+		filepath.Join(path, fileNameParts[len(fileNameParts)-1]),
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
+		file.Mode(),
+	)
 
 	if err != nil {
 		log.Fatal(err)
