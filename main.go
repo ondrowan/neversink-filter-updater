@@ -45,7 +45,14 @@ func main() {
 	}
 
 	tmpArchivePath := createTmpArchive(zipFile)
-	unzipArchive(tmpArchivePath, filterType)
+	unzippedFileCount := unzipArchive(tmpArchivePath, filterType)
+
+	if unzippedFileCount > 0 {
+		fmt.Fprintf(os.Stdout, "%d files were unzipped.\n", unzippedFileCount)
+	} else {
+		exit(1, fmt.Sprintf("No files were unzipped. Is \"%s\" correct filter type?", filterType))
+	}
+
 	writeToDotfile(*release.TagName)
 	showReleaseNotes(release)
 
@@ -126,7 +133,7 @@ func createTmpArchive(content io.ReadCloser) string {
 	return tmpfile.Name()
 }
 
-func unzipArchive(path string, filterType string) {
+func unzipArchive(path string, filterType string) int {
 	archiveReader, err := zip.OpenReader(path)
 
 	if err != nil {
@@ -147,11 +154,16 @@ func unzipArchive(path string, filterType string) {
 		}
 	}
 
+	copiedFiles := 0
+
 	for _, archiveFile := range archiveReader.File {
 		if strings.HasSuffix(archiveFile.Name, ".filter") && fileFilter(archiveFile) {
 			copyFileContent(archiveFile, poePath)
+			copiedFiles++
 		}
 	}
+
+	return copiedFiles
 }
 
 func filterTypeToFolder(filterType string) string {
