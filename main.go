@@ -149,7 +149,6 @@ func unzipArchive(path string, filterType string) {
 
 	for _, archiveFile := range archiveReader.File {
 		if strings.HasSuffix(archiveFile.Name, ".filter") && fileFilter(archiveFile) {
-			fmt.Println(archiveFile.Name)
 			copyFileContent(archiveFile, poePath)
 		}
 	}
