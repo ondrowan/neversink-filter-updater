@@ -176,7 +176,7 @@ func createTmpArchive(content io.ReadCloser) string {
 	return tmpfile.Name()
 }
 
-func unzipArchive(path string, filterType string) int {
+func unzipArchive(path string, filterStyle string) int {
 	archiveReader, err := zip.OpenReader(path)
 
 	if err != nil {
@@ -187,13 +187,13 @@ func unzipArchive(path string, filterType string) int {
 
 	var fileFilter func(*zip.File) bool
 
-	if filterType == "" {
+	if filterStyle == "" {
 		fileFilter = func(file *zip.File) bool {
 			return strings.Count(file.Name, "/") == 1
 		}
 	} else {
 		fileFilter = func(file *zip.File) bool {
-			return strings.Split(file.Name, "/")[1] == filterTypeToFolder(filterType)
+			return strings.Split(file.Name, "/")[1] == filterStyleToFolder(filterStyle)
 		}
 	}
 
@@ -209,8 +209,8 @@ func unzipArchive(path string, filterType string) int {
 	return copiedFiles
 }
 
-func filterTypeToFolder(filterType string) string {
-	return fmt.Sprintf("(STYLE) %s", strings.ToUpper(filterType))
+func filterStyleToFolder(filterStyle string) string {
+	return fmt.Sprintf("(STYLE) %s", strings.ToUpper(filterStyle))
 }
 
 func copyFileContent(file *zip.File, path string) {
