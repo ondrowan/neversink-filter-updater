@@ -23,13 +23,29 @@ var poePath = filepath.Join(os.Getenv("USERPROFILE"), "Documents/My Games/Path o
 var dotFilePath = filepath.Join(poePath, ".neversink-updater")
 
 func main() {
-	var filterType string
+	filterStyle := flag.String(
+		"style",
+		"",
+		"Style of filters. Can be one of: blue, purple, slick, streamsound.")
+	helpPtr := flag.Bool("help", false, "Prints help.")
+	versionPtr := flag.Bool("version", false, "Prints version.")
 
-	if len(os.Args) > 1 {
-		filterType = os.Args[1]
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage:")
+		flag.PrintDefaults()
 	}
 
-	parseFlags()
+	flag.Parse()
+
+	if *versionPtr {
+		fmt.Fprintf(os.Stdout, version)
+		os.Exit(0)
+	}
+
+	if *helpPtr {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
 
 	if err := checkPoeDir(); err != nil {
 		exit(1, err.Error())
@@ -54,12 +70,12 @@ func main() {
 	}
 
 	tmpArchivePath := createTmpArchive(zipFile)
-	unzippedFileCount := unzipArchive(tmpArchivePath, filterType)
+	unzippedFileCount := unzipArchive(tmpArchivePath, *filterStyle)
 
 	if unzippedFileCount > 0 {
 		fmt.Fprintf(os.Stdout, "%d files were unzipped.\n", unzippedFileCount)
 	} else {
-		exit(1, fmt.Sprintf("No files were unzipped. Is \"%s\" correct filter type?", filterType))
+		exit(1, fmt.Sprintf("No files were unzipped. Is \"%s\" correct filter style?", *filterStyle))
 	}
 
 	writeToDotfile(*release.TagName)
@@ -71,28 +87,6 @@ func main() {
 	os.Remove(tmpArchivePath)
 
 	exit(0, "")
-}
-
-func parseFlags() {
-	helpPtr := flag.Bool("help", false, "Prints help")
-	versionPtr := flag.Bool("version", false, "Prints version")
-
-	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage:")
-		flag.PrintDefaults()
-	}
-
-	flag.Parse()
-
-	if *versionPtr {
-		fmt.Fprintf(os.Stdout, version)
-		os.Exit(0)
-	}
-
-	if *helpPtr {
-		flag.PrintDefaults()
-		os.Exit(0)
-	}
 }
 
 func exit(code int, message string) {
