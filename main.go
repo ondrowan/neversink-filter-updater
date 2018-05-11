@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,6 +17,8 @@ import (
 	"github.com/google/go-github/github"
 )
 
+var version = "0.1.0"
+
 var poePath = filepath.Join(os.Getenv("USERPROFILE"), "Documents/My Games/Path of Exile")
 var dotFilePath = filepath.Join(poePath, ".neversink-updater")
 
@@ -25,6 +28,8 @@ func main() {
 	if len(os.Args) > 1 {
 		filterType = os.Args[1]
 	}
+
+	parseFlags()
 
 	if err := checkPoeDir(); err != nil {
 		exit(1, err.Error())
@@ -66,6 +71,28 @@ func main() {
 	os.Remove(tmpArchivePath)
 
 	exit(0, "")
+}
+
+func parseFlags() {
+	helpPtr := flag.Bool("help", false, "Prints help")
+	versionPtr := flag.Bool("version", false, "Prints version")
+
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage:")
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+
+	if *versionPtr {
+		fmt.Fprintf(os.Stdout, version)
+		os.Exit(0)
+	}
+
+	if *helpPtr {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
 }
 
 func exit(code int, message string) {
