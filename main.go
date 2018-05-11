@@ -26,6 +26,10 @@ func main() {
 		filterType = os.Args[1]
 	}
 
+	if err := checkPoeDir(); err != nil {
+		exit(1, err.Error())
+	}
+
 	release, err := getLatestRelease()
 
 	if err != nil {
@@ -79,6 +83,18 @@ func exit(code int, message string) {
 	fmt.Scanln()
 
 	os.Exit(0)
+}
+
+func checkPoeDir() error {
+	if _, err := os.Stat(poePath); err != nil {
+		if os.IsNotExist(err) {
+			return errors.New("Path of Exile folder does not exist. Make sure it is installed.")
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func getLatestRelease() (*github.RepositoryRelease, error) {
