@@ -19,10 +19,19 @@ import (
 
 var version = "0.1.0"
 
-var poePath = filepath.Join(os.Getenv("USERPROFILE"), "Documents/My Games/Path of Exile")
-var dotFilePath = filepath.Join(poePath, ".neversink-updater")
-
 func main() {
+	documentsfolder, err := DocumentsFolder()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	var (
+		poePath     = filepath.Join(documentsfolder, "My Games/Path of Exile")
+		dotFilePath = filepath.Join(poePath, ".neversink-updater")
+	)
+
 	filterStyle := flag.String(
 		"style",
 		"",
@@ -47,7 +56,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err := checkPoeDir(); err != nil {
+	if err := checkPoeDir(poePath); err != nil {
 		exit(1, err.Error())
 	}
 
@@ -57,7 +66,7 @@ func main() {
 		exit(1, err.Error())
 	}
 
-	currentVersion := getCurrentVersion()
+	currentVersion := getCurrentVersion(dotFilePath)
 
 	if *release.TagName == currentVersion {
 		exit(0, "There no need to update.")
@@ -70,7 +79,7 @@ func main() {
 	}
 
 	tmpArchivePath := createTmpArchive(zipFile)
-	unzippedFileCount := unzipArchive(tmpArchivePath, *filterStyle)
+	unzippedFileCount := unzipArchive(tmpArchivePath, poePath, *filterStyle)
 
 	if unzippedFileCount > 0 {
 		fmt.Fprintf(os.Stdout, "%d files were unzipped.\n", unzippedFileCount)
@@ -78,7 +87,7 @@ func main() {
 		exit(1, fmt.Sprintf("No files were unzipped. Is \"%s\" correct filter style?", *filterStyle))
 	}
 
-	writeToDotfile(*release.TagName)
+	writeToDotfile(dotFilePath, *release.TagName)
 	showReleaseNotes(release)
 
 	// Clean up
@@ -106,8 +115,8 @@ func exit(code int, message string) {
 	os.Exit(0)
 }
 
-func checkPoeDir() error {
-	if _, err := os.Stat(poePath); err != nil {
+func checkPoeDir(dirPath string) error {
+	if _, err := os.Stat(dirPath); err != nil {
 		if os.IsNotExist(err) {
 			return errors.New("Path of Exile folder does not exist. Make sure it is installed.")
 		}
@@ -170,8 +179,8 @@ func createTmpArchive(content io.ReadCloser) string {
 	return tmpfile.Name()
 }
 
-func unzipArchive(path string, filterStyle string) int {
-	archiveReader, err := zip.OpenReader(path)
+func unzipArchive(archivePath string, targetPath string, filterStyle string) int {
+	archiveReader, err := zip.OpenReader(archivePath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -195,7 +204,7 @@ func unzipArchive(path string, filterStyle string) int {
 
 	for _, archiveFile := range archiveReader.File {
 		if strings.HasSuffix(archiveFile.Name, ".filter") && fileFilter(archiveFile) {
-			copyFileContent(archiveFile, poePath)
+			copyFileContent(archiveFile, targetPath)
 			copiedFiles++
 		}
 	}
@@ -235,7 +244,7 @@ func copyFileContent(file *zip.File, path string) {
 	rc.Close()
 }
 
-func getCurrentVersion() string {
+func getCurrentVersion(dotFilePath string) string {
 	content, err := ioutil.ReadFile(dotFilePath)
 
 	if err != nil {
@@ -248,7 +257,7 @@ func getCurrentVersion() string {
 	return string(content)
 }
 
-func writeToDotfile(version string) {
+func writeToDotfile(dotFilePath string, version string) {
 	content := []byte(version)
 	err := ioutil.WriteFile(dotFilePath, content, 0644)
 
