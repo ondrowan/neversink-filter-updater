@@ -123,7 +123,8 @@ func exit(code int, message string) {
 func checkPoeDir(dirPath string) error {
 	if _, err := os.Stat(dirPath); err != nil {
 		if os.IsNotExist(err) {
-			return errors.New("Path of Exile folder does not exist. Make sure it is installed.")
+			return fmt.Errorf("Path of Exile folder does not seem to exist. "+
+				"It is expected to be at %s. Make sure the game is installed.", dirPath)
 		}
 
 		return err
