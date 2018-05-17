@@ -20,17 +20,20 @@ import (
 var version = "0.1.0"
 
 func main() {
+	// Folder paths
+
 	documentsfolder, err := DocumentsFolder()
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	var (
 		poePath     = filepath.Join(documentsfolder, "My Games/Path of Exile")
 		dotFilePath = filepath.Join(poePath, ".neversink-updater")
 	)
+
+	// Flags
 
 	filterStyle := flag.String(
 		"style",
@@ -55,6 +58,8 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
+
+	// Updater logic
 
 	if err := checkPoeDir(poePath); err != nil {
 		exit(1, err.Error())
